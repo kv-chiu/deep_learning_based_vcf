@@ -36,14 +36,14 @@ class DataPreparationTool(ABC):
                 self.end_cmd(cmd, isSuccess)
         return isSuccess
 
-class DataFilterTool(ABC):
-    @abstractmethod
-    def filter(self, data, filter_criteria):
-        pass
+# todo: 设计其他接口和抽象类
 
-class DataMatchTool(ABC):
-    @abstractmethod
-    def match(self, data, match_criteria):
-        pass
+# class DataFilterTool(ABC):
+#     @abstractmethod
+#     def filter(self, data, filter_criteria):
+#         pass
 
-# 定义其他接口和抽象类...
+# class DataMatchTool(ABC):
+#     @abstractmethod
+#     def match(self, data, match_criteria):
+#         pass
