@@ -47,4 +47,9 @@ class DataFilterTool(ABC):
     def filter(self, data, filter_criteria):
         pass
 
+class DataMatchTool(ABC):
+    @abstractmethod
+    def match(self, data, match_criteria):
+        pass
+
 # 定义其他接口和抽象类...
