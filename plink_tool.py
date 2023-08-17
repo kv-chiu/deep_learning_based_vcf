@@ -1,4 +1,3 @@
-from typing import Optional, List
 from collections import defaultdict
 
 from .interfaces import DataPreparationTool

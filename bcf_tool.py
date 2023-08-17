@@ -1,5 +1,3 @@
-from typing import Optional, List
-
 from .interfaces import DataPreparationTool
 from .config import ENV_PATH
 

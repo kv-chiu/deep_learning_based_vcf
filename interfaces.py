@@ -1,9 +1,3 @@
-# 在 interfaces.py 中
-from abc import ABC, abstractmethod
-from typing import List, Union
-import subprocess
-import os
-
 class DataPreparationTool(ABC):
     def __init__(self):
         self.current_dir = os.getcwd()
