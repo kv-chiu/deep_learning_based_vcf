@@ -1,3 +1,5 @@
+from . import ABC, abstractmethod, List, Union, subprocess, os
+
 class DataPreparationTool(ABC):
     def __init__(self):
         self.current_dir = os.getcwd()
