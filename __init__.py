@@ -1,6 +1,6 @@
 # 在 interfaces.py 中
 from abc import ABC, abstractmethod
-from typing import List, Union
+from typing import List, Union, Tuple
 import subprocess
 import os
 

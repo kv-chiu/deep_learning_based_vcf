@@ -1,4 +1,4 @@
-from . import ABC, abstractmethod, List, Union, subprocess, os
+from . import ABC, abstractmethod, List, Optional, subprocess, os, Tuple
 
 class DataPreparationTool(ABC):
     def __init__(self):
@@ -24,7 +24,7 @@ class DataPreparationTool(ABC):
             print('命令执行失败。')
         print('-' * 50)
 
-    def run_cmd_list(self, arr: List[str]) -> Union[bool, None]:
+    def run_cmd_list(self, arr: List[str]) -> Optional[bool]:
         isSuccess = False
         for cmd in arr:
             self.start_cmd(cmd)
@@ -37,6 +37,47 @@ class DataPreparationTool(ABC):
                 isSuccess = True
                 self.end_cmd(cmd, isSuccess)
         return isSuccess
+    
+    def get_run_cmd_list_res(self, arr: List[str]) -> Optional[List[Tuple[int, str, str]]]:
+        '''
+        :param arr: 命令列表
+        :return: [(returncode, stdout, stderr), ...]
+        '''
+        
+        res = []
+        for i, cmd in enumerate(arr):
+            if i == 0:
+                self.start_cmd(cmd)
+            proc = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            res.append((proc.returncode, proc.stdout.decode('utf-8'), proc.stderr.decode('utf-8')))
+            if proc.returncode != 0:
+                self.end_cmd(cmd, False)
+                return res
+            self.end_cmd(cmd, True)
+        return res
+    
+    def get_file_dir(self, file_path: str) -> str:
+        return os.path.dirname(file_path)
+    
+    def get_file_name(self, file_path: str) -> str:
+        return file_path.split("/")[-1]
+    
+    def get_output_dir(self, dir_name: str) -> str:
+        return self.current_dir + '/' + dir_name
+    
+    def compress_with_bgzip(self, input_file):
+        output_file = f"{input_file}.gz"
+        cmd = f"bgzip -c {input_file} > {output_file}"
+        subprocess.run(cmd, shell=True)
+        return output_file
+
+def get_content_from_gz_file(gz_file_path: str) -> str:
+    cmd = f'gzip -dc {gz_file_path}'
+    proc = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE)
+    if proc.returncode == 0:
+        return proc.stdout.decode('utf-8')
+    else:
+        return ''
 
 # todo: 设计其他接口和抽象类
 
