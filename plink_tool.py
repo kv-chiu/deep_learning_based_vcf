@@ -1,7 +1,8 @@
 from collections import defaultdict
 import gzip
+import copy
 
-from . import Optional, List, Union, os
+from . import Optional, List, Union, os, Dict
 from .interfaces import DataPreparationTool
 from .config import ENV_PATH
 
@@ -68,32 +69,37 @@ class PlinkMatchTool(DataPreparationTool):
     def __init__(self):
         super().__init__()
 
-    def get_match_snp_list(self, filter_assoc_file: str) -> List[str]:
+    def get_match_snp_list(self, filter_assoc_file: str) -> Dict:
         '''
         :param filter_assoc_file: plink.assoc.filter文件
-        :return: SNP列表
+        :return: SNP字典
         '''
 
         # step1: 读取filter_assoc_file，获取SNP列表
-        snp_list = []
+        snp_dict = dict()
         with open(filter_assoc_file, 'r') as f:
             lines = f.readlines()
         for line in lines:
             if line.split()[0] == 'CHR':
                 continue
             else:
-                snp_list.append(line.split()[1])
-        return snp_list
+                snp = line.split()[1]
+                snp_dict[snp] = line.split()[:4]
+        return snp_dict
 
-    def get_match_vcf_file(self, filter_snp_list: List[str], vcf_file: str) -> Optional[str]:
+    def get_match_vcf_file(self, filter_snp_dict: Dict, vcf_file: str) -> Optional[str]:
         '''
-        :param filter_snp_list: SNP列表
+        :param filter_snp_dict: SNP字典
         :param vcf_file: vcf文件
         :return: ~plink.assoc.match文件
         '''
 
-        # step2: 基于snp_list创建哈希表，key为snp，value默认为""
-        snp_dict = defaultdict(str)
+        # step2
+        filter_snp_list = list(filter_snp_dict.keys())
+        temp_snp_dict = copy.deepcopy(filter_snp_dict)
+        for snp in temp_snp_dict:
+            temp_snp_dict[snp] = '\t'.join(temp_snp_dict[snp]) + '\t.\t.\t.\t.\t.\t.\n'
+
         if vcf_file.endswith('.gz'):
             with gzip.open(vcf_file, 'rb') as f:
                 lines = f.readlines()
@@ -101,12 +107,13 @@ class PlinkMatchTool(DataPreparationTool):
             with open(vcf_file, 'r') as f:
                 lines = f.readlines()
         for line in lines:
-            if line.startswith('#'):
+            if line.startswith('#'.encode()):
                 continue
             else:
                 snp = line.split()[2]
+                snp = snp.decode()
                 if snp in filter_snp_list:
-                    snp_dict[snp] = line
+                    temp_snp_dict[snp] = line.decode()
 
         # step3: 读取snp_dict，将value写入新文件
         vcf_file_name = self.get_file_name(vcf_file)
@@ -115,8 +122,8 @@ class PlinkMatchTool(DataPreparationTool):
             os.mkdir(output_dir)
         output_file = output_dir + '/' + vcf_file_name + '.match'
         with open(output_file, 'w') as f:
-            for snp in filter_snp_list:
-                f.write(snp_dict[snp])
+            for snp in temp_snp_dict:
+                f.write(temp_snp_dict[snp])
         return output_file
     
     def process(self, filter_assoc_file: str, vcf_file_list: List[str]) -> Union[Optional[List[str]], str]:
